@@ -1,0 +1,32 @@
+---
+# tasks file for nginx
+- name: update apt cache and install nginx
+  apt: 
+    name: nginx
+    state: present
+    update_cache: yes
+
+- name: copy html file to the server
+  template: 
+    src: "{{ app_root  }}/index.html.j2"
+    dest: "{{ document_root }}/index.html"
+
+- name: apply nginx template and restart nginx server
+  template:
+    src: templates/nginx.conf.j2
+    dest: /etc/nginx/sites-available/default
+  notify: restart nginx
+
+- name: enable new site
+  file: 
+    src: /etc/nginx/sites-available/default
+    dest: /etc/nginx/sites-enabled/default
+    state: link
+  notify: restart nginx  
+
+- name: allow all access to tcp port 80
+  ufw: 
+    rule: allow
+    port: '80'
+    proto: tcp
+
